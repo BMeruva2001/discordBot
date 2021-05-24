@@ -1,3 +1,4 @@
+import datetime
 import discord
 import json
 import os
@@ -57,6 +58,15 @@ class Currency(commands.Cog):
     async def on_message(self, ctx):
         await open_account(ctx.author)
 
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            remaining_time = str(datetime.timedelta(seconds=int(error.retry_after)))
+            em = discord.Embed(title="Calm Down!")
+            msg = "Try again after " + str(remaining_time)
+            em.add_field(name=msg, value="You can only mine twice in a minute.")
+            await ctx.channel.send(embed=em)
+
     @commands.command(aliases=['bal'])
     async def balance(self, ctx, member: discord.Member = None):
         if member is None:
@@ -78,6 +88,24 @@ class Currency(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command()
+    @commands.cooldown(1, 60 * 60 * 24, commands.BucketType.user)
+    async def daily(self, ctx):
+        await open_account(ctx.author)
+        user = ctx.author
+        users = await get_bank_data()
+
+        earnings = 250
+
+        await ctx.send(f"You received a daily bonus of {earnings} berry")
+
+        users[str(user.id)]["wallet"] += earnings
+
+        with open("bank.json", "w") as f:
+            json.dump(users, f)
+        return True
+
+    @commands.command()
+    @commands.cooldown(2, 60, commands.BucketType.user)
     async def mine(self, ctx):
         await open_account(ctx.author)
         user = ctx.author
@@ -212,6 +240,9 @@ class Currency(commands.Cog):
         bal = await update_bank(member)
         robber = await update_bank(ctx.author)
 
+        if member is ctx.author:
+            await ctx.send("Are you actually trying to rob yourself?")
+            return
         if robber[0] < 100:
             await ctx.send("You need at least 100 berry to rob another person.\nTry mining some berry.")
             return
@@ -263,8 +294,6 @@ class Currency(commands.Cog):
                 index += 1
 
         await ctx.send(embed=em)
-
-
 
 
 def setup(client):
