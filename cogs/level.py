@@ -46,7 +46,7 @@ class Levelsys(commands.Cog):
                             embed = discord.Embed(description=f"{message.author.mention} got the role **{level[i]}**.")
                             await message.channel.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['level'])
     async def rank(self, ctx, member: discord.Member = None):
         member = ctx.author if not member else member
         stats = levelling.find_one({"id": member.id})

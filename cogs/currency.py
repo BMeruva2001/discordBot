@@ -6,6 +6,7 @@ import random
 from discord.ext import commands
 
 from main import client
+from cogs import crystals
 
 intents = discord.Intents.default()
 intents.members = True
@@ -13,6 +14,11 @@ intents.guilds = True
 
 mainshop = [{"emoji": "🔷", "name": "blue badge", "description": "display on profile", "price": "500"},
             {"emoji": "👑", "name": "crown", "description": "idk man", "price": "100"}]
+
+crystalList = [{"emoji": "<:ruby:846644957854695424>", "name": "ruby"},
+            {"emoji": "<:emerald:847025055531008040>", "name": "emerald"},
+            {"emoji": "<:bismuth:848478636142493736>", "name": "bismuth"},
+            {"emoji": "<:sapphire:848478655940263946>", "name": "sapphire"}]
 
 os.chdir("C:\\Users\\Bharath Reddy Meruva\\Desktop\\my code\\discord bot\\cogs")
 
@@ -64,7 +70,7 @@ class Currency(commands.Cog):
             remaining_time = str(datetime.timedelta(seconds=int(error.retry_after)))
             em = discord.Embed(title="Calm Down!")
             msg = "Try again after " + str(remaining_time)
-            em.add_field(name=msg, value="You can only mine twice in a minute.")
+            em.add_field(name=msg, value="You need to wait till you can use the command again.")
             await ctx.channel.send(embed=em)
 
     @commands.command(aliases=['bal'])
@@ -105,20 +111,38 @@ class Currency(commands.Cog):
         return True
 
     @commands.command()
-    @commands.cooldown(2, 60, commands.BucketType.user)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def mine(self, ctx):
         await open_account(ctx.author)
         user = ctx.author
         users = await get_bank_data()
 
-        earnings = random.randrange(51)
+        earnings = random.randrange(50) + 1
+        chances = random.randrange(10)
 
-        await ctx.send(f"You found {earnings} berry")
+        if chances == 1:
+            multiple = random.randrange(5)
+            if multiple == 1:
+                amount = 2
+                crys = await crystals.update_crystals(user, amount)
+            else:
+                amount = 1
+                crys = await crystals.update_crystals(user, amount)
 
-        users[str(user.id)]["wallet"] += earnings
+            for item in crystalList:
+                name_1 = item["name"].lower()
+                if name_1 == crys:
+                    emoji_1 = item["emoji"]
+                    await ctx.send(f"Oh what's this? You also found something shiny!\nYou found {amount} {crys}(s) {emoji_1}.")
+                    break
 
-        with open("bank.json", "w") as f:
-            json.dump(users, f)
+        else:
+            await ctx.send(f"You found {earnings} berry")
+            users[str(user.id)]["wallet"] += earnings
+
+            with open("bank.json", "w") as f:
+                json.dump(users, f)
+
         return True
 
     @commands.command(aliases=['wit'])

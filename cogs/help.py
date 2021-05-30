@@ -42,7 +42,7 @@ class Help(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['user'])
+    @commands.command(aliases=['user', 'info'])
     async def userinfo(self, ctx, member: discord.Member = None):
         global emoji
         member = ctx.author if not member else member
@@ -68,11 +68,6 @@ class Help(commands.Cog):
         bankbal = users[str(member.id)]["bank"]
         embed.add_field(name="Wallet", value=wallet)
         embed.add_field(name="Bank balance", value=bankbal)
-        '''user = member
-        bag = users[str(user.id)]["bag"]
-        for item in bag:
-            emoji = item["emoji"]
-            embed.add_field(name="Items", value=f"{emoji}")'''
 
         await ctx.send(embed=embed)
 
